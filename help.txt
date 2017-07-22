@@ -1,0 +1,21 @@
+Command list:
+
+  <name>  | <arguments>                       |  <description>
+----------+-----------------------------------+---------------------------------------------------------------------------------------
+!version  |                                   | Displays the version information of the bot.
+!quit     |                                   | Kills the bot (Requires admin privs)
+!next     |                                   | NEXT!
+!remove   | <nick> [reason]                   | Removes <nick> from channel with optional [reason].
+!ban      | <mask> [<remove> <nick> [reason]] | Bans the mask <mask> and can remove <nick> with optional [reason] if <remove> is true.
+!unban    | <mask>                            | Unbans the specified <mask>.
+!quiet    | <mask>                            | Sets quiet on <mask>.
+!unquiet  | <mask>                            | Removes quiet on <mask>.
+!op       | [nick]                            | Ops [nick]. If not specified, ops you.
+!deop     | [nick]                            | Deops [nick]. If not specified, deops you.
+!voice    | [nick]                            | Gives voice to [nick]. If not specified, voices you.
+!devoice  | [nick]                            | Takes voice from [nick. If not specified, devoices you.
+!exempt   | [hostmask]                        | Sets ban exempt status on [hostmask]. If not specified, uses your hostmask.
+!unexempt | [hostmask]                        | Removes ban exempt status from [hostmask]. If not specified, uses your hostmask.
+!help     |                                   | Sends this help message
+
+END
