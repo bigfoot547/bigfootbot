@@ -301,6 +301,24 @@ class Bot(pydle.Client):
 		# Print message.
 		debug("Target: {}, Source: {}, Message: {}".format(target, source, message))
 
+	def on_kick(self, channel, target, by, reason=None):
+		""" Called when a person is kicked from the channel """
+		# Call the superclass.
+		super().on_kick(channel, target, by, reason)
+
+		# Rejoin the channel
+		if target == self.config.nick:
+			self.join(channel)
+
+	def on_part(self, channel, user, message=None):
+		""" Called when a person parts from the channel """
+		# Call the superclass.
+		super().on_kick(channel, user, message)
+
+		# Rejoin the channel
+		if user == self.config.nick:
+			self.join(channel)
+
 	def on_raw(self, data):
 		""" Debugging function to print all raw data to stdout """
 		# Call the superclass.
