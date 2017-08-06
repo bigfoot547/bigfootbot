@@ -2,7 +2,8 @@ import pydle
 import subprocess
 import sys
 import exceptions
-from time import sleep
+from bs4 import BeautifulSoup
+import urllib
 
 # Set our name and version.
 name = "Python3Bot"
@@ -72,6 +73,38 @@ class Bot(pydle.Client):
 	@pydle.coroutine
 	def __handle_internal(self, target, source, message):
 		""" Handles commands for internal plugin(s). """
+
+		# Test for links
+		link = message.find("http://")
+		prot_len = 7
+		found = False
+		link_end = len(message)
+		link_url = -1
+		if link == -1:
+			link = message.find("https://")
+			prot_len = 8
+
+		if link != -1:
+			if link != 0:
+				if message[link-1] == ' ':
+					found = True
+			else:
+				found = True
+			if found:
+				for i in range(link, len(message)):
+					if message[i] == '/' and link_url == -1 and i > prot_len+1:
+						link_url = i
+					elif message[i] == ' ':
+						link_end = i
+						if link_url == -1:
+							link_url = i
+						break
+				try:
+					soup = BeautifulSoup(urllib.request.urlopen(message[link:link_end]), "html5lib")
+					self.__respond(target, source, " [ {} ] - {} ".format(soup.title.string, message[link+prot_len:link_url]))
+				except:
+					self.__respond(target, source, "{}".format(sys.exec_info()[0]))
+
 		if message == cmd+"version":
 			# Handler for !version.
 			self.message(target, "{}: {}, Version: {}. {}".format(source, name, version, target))
@@ -339,4 +372,4 @@ class Bot(pydle.Client):
 
 	def on_data_error(self, exception):
 		""" Handle's socket errors. """
-		error("Caught a socket exception. {} {}".format(exception.__name__, str(e)), fatal = True)
+		error("Caught a socket exception. {} {}".format(type(exception), str(e)), fatal = True)

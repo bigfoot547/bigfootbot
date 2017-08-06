@@ -51,17 +51,17 @@ except KeyboardInterrupt:
 	try:
 		bot.error("Recieved KeyboardInterrupt, Exiting.")
 		client.quit(message = "Recieved KeyboardInterrupt.")
-	except:
+	except BaseException as e:
 		# Catch exceptions from pydle.
-		bot.error("Failed to disconnect, probably haven't connected yet.")
+		bot.error("Failed to disconnect, probably haven't connected yet. {} {}".format(str(e), type(e)))
 
-	raise SystemExit(0)
+	raise SystemExit(2)
 except (ConnectionRefusedError, socket.timeout):
 	# Handle connection errors.
 	bot.error("Error connecting to {}:{}, Exception: {} {}".format(config_obj.server, config_obj.port, sys.exc_info()[0], sys.exc_info()[1]), fatal = True)
 except:
 	# Handle random exceptions.
-	# It's safer to exit on unknown exceptions, then to keep going.
-	bot.error("Caught unhandled exception: {} {}".format(sys.exc_info()[0].__name__, sys.exc_info()[1]), fatal = False)
+	# It's safer to exit on unknown exceptions, than to keep going.
+	bot.error("Caught unhandled exception: {} {}".format(str(sys.exc_info()[0]), sys.exc_info()[1]), fatal = True)
 
 
