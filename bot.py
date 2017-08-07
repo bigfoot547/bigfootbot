@@ -4,6 +4,7 @@ import sys
 import exceptions
 from bs4 import BeautifulSoup
 import urllib
+import ban
 
 # Set our name and version.
 name = "Python3Bot"
@@ -43,6 +44,9 @@ class Bot(pydle.Client):
 		# I'm gonna implement something here.
 		# But for now just return the super call.
 		debug("Quitting. Reason: {}".format(message))
+		# Save and clean up handlers
+		self.Bans.save_bans()
+
 		return super().quit(message)
 
 	def on_connect(self):
@@ -50,6 +54,10 @@ class Bot(pydle.Client):
 		
 		# Call the superclass.
 		super().on_connect()
+		# Set modes on self
+		self.rawmsg("MODE", self.config.nick, "+wg")
+		# Initialize handlers
+		self.Bans = ban.BanManager("bans.dat", self)
 		# Join channels.
 		for channel in self.channel_list:
 			self.join(channel)
@@ -73,6 +81,7 @@ class Bot(pydle.Client):
 	@pydle.coroutine
 	def __handle_internal(self, target, source, message):
 		""" Handles commands for internal plugin(s). """
+		message = message.strip(' ')
 
 		# Test for links
 		link = message.find("http://")
@@ -107,7 +116,7 @@ class Bot(pydle.Client):
 
 		if message == cmd+"version":
 			# Handler for !version.
-			self.message(target, "{}: {}, Version: {}. {}".format(source, name, version, target))
+			self.notice(target, "{}: {}, Version: {}. {}".format(source, name, version, target))
 
 		if message == cmd+"quit":
 			# Handler for !quit.
@@ -131,62 +140,76 @@ class Bot(pydle.Client):
 				elif len(args) == 3 and args[2] != "":
 					pmsg = "Removed by {} (".format(source) + args[2] + ")"
 				else:
-					self.message(target, "{}: Invalid command invocation.".format(source))
+					self.notice(target, "{}: Invalid command invocation.".format(source))
 					return
 				
 				if args[1] == self.config.nick:
-					self.message(target, "{}: I refuse to remove myself.".format(source))
+					self.notice(target, "{}: I refuse to remove myself.".format(source))
 					return
 				
 				self.rawmsg("REMOVE", target, args[1], pmsg)
-				self.message(target, "{}: Removed {}.".format(source, args[1]))
+				self.notice(target, "{}: Removed {}.".format(source, args[1]))
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
 		
-		if message.startswith(cmd+"ban"): # syntax !ban <hostmask> [<remove> <nick> reason>]
+		if message.startswith(cmd+"ban"):
 			host = yield self.whois(source)
 			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
-				args = message.split(' ', maxsplit=4)
+				args = message.split(' ', maxsplit=3)
 				remove = False
 				reason = ""
 				#self.message(target, "Ban command invoked")
 				if len(args) == 2:
 					#self.message(target, "Banning without removing")
-					self.rawmsg("MODE", target, '+b', args[1])
+					ban_number = self.Bans.add_ban(target, args[1])
+					self.__respond(target, source, "{}: Ban added on {} (Channel: {}) as ban number {}.".format(source, args[1], target, ban_number))
 				elif len(args) > 2:
 					#self.message(target, "Banning with 2nd argument")
-					remove = is_yes(args[2])
-					
-					if len(args) == 4:
+					if len(args) == 3:
 						reason = "Banned by {}".format(source)
-					elif len(args) == 5:
-						reason = "Banned by {} ({})".format(source, args[4])
+					elif len(args) == 4:
+						reason = "Banned by {} ({})".format(source, args[3])
 					else:
 						self.__respond(target, source, "{}: Invalid command invocation.".format(source))
 						return
+
 					#self.message(target, "Remove reason {}".format(reason))
-					self.rawmsg("MODE", target, '+b', args[1])
-					if remove:
-						#self.message(target, "Removing")
-						self.rawmsg("REMOVE", target, args[3], reason)
+					ban_number = self.Bans.add_ban(target, args[1])
+					self.rawmsg("REMOVE", target, args[2], reason)
+					self.__respond(target, source, "{}: Ban added on {} (Channel: {}) as ban number {}.".format(source, args[1], target, ban_number))
 				else:
 					self.__respond(target, source, "{}: Invalid command invocation.".format(source))
 					return
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
 		
-		if message.startswith(cmd+"unban"):
+		if message.startswith(cmd+"rmban"):
 			host = yield self.whois(source)
 			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
-					self.rawmsg("MODE", target, '-b', args[1])
+					try:
+						num = int(float(args[1]))
+					except ValueError:
+						self.__respond(target, source, "{}: Invalid number.".format(source))
+						return
+					status = self.Bans.remove_ban(num)
+					if status != 0:
+						self.__respond(target, source, "{}: Ban number out of range.".format(source))
+					else:
+						self.__respond(target, source, "{}: Ban lifted.".format(source))
 				else:
 					self.__respond(target, source, "{}: Invalid command invocation.".format(source))
 					return
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
-		
+
+		if message == cmd+"lsban":
+			self.notice(source, "Bot ban list:")
+			for i in range(0, len(self.Bans.bans)):
+				self.notice(source, "{}. Channel: {} | Hostmask: {}".format(i, self.Bans.bans[i].target, self.Bans.bans[i].mask))
+			self.notice(source, "End of bot ban list.")
+
 		if message.startswith(cmd+"quiet"): # syntax !quiet <hostmask>
 			host = yield self.whois(source)
 			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
@@ -285,14 +308,16 @@ class Bot(pydle.Client):
 		
 		if message == cmd+"help":
 			# Please leave this here.
-			"""helptext = "" \
+			helptext = "" \
 			"Command list:\n" \
-			"  <name>  | <arguments>                       |  <description>\n" \
+			" <name>   | <arguments>                       | <description>\n" \
 			"!version  |                                   | Displays the version information of the bot.\n" \
 			"!quit     |                                   | Kills the bot (Requires admin privs)\n" \
 			"!next     |                                   | NEXT!\n" \
 			"!remove   | <nick> [reason]                   | Removes <nick> from channel with optional [reason].\n" \
-			"!ban      | <mask> [<remove> <nick> [reason]] | Bans the mask <mask> and can remove <nick> with optional [reason] if <remove> is true.\n" \
+			"!ban      | <mask> [<nick> [reason]]          | Bans the mask <mask> and can remove <nick> with [reason] if <nick> specified.\n" \
+			"!rmban    | <number>                          | Lifts ban specified by <number>.\n" \
+			"!lsban    |                                   | Lists the banlist for the bot. Can be quite a flood at times.\n" \
 			"!unban    | <mask>                            | Unbans the specified <mask>.\n" \
 			"!quiet    | <mask>                            | Sets quiet on <mask>.\n" \
 			"!unquiet  | <mask>                            | Removes quiet on <mask>.\n" \
@@ -303,17 +328,16 @@ class Bot(pydle.Client):
 			"!exempt   | [hostmask]                        | Sets ban exempt status on [hostmask]. If not specified, uses your hostmask.\n" \
 			"!unexempt | [hostmask]                        | Removes ban exempt status from [hostmask]. If not specified, uses your hostmask.\n" \
 			"!help     |                                   | Sends this help message\n" \
-			"End of help." """
-			
-			self.message(target, "{}: I have PM'd you the help link.".format(source))
-			self.message(source, "Help link: http://ix.io/yDJ")
+			"End of help."
+
+			self.notice(source, helptext)
 
 	def __respond(self, target, source, message):
 		""" Responds to a command. """
 		if self.is_channel(target):
-			self.message(target, message)
+			self.notice(target, message)
 		else:
-			self.message(source, message)
+			self.notice(source, message)
 
 	def on_message(self, target, source, message):
 		""" Debugging function to print messages to stdout """
@@ -364,7 +388,8 @@ class Bot(pydle.Client):
 		data = data.strip('\n')
 
 		# And output it.
-		debug(data)
+		if data.find("PING") == -1 and data.find("PRIVMSG") == -1:
+			debug(data)
 
 	def on_unknown(self, message):
 		""" Unknown command. """
