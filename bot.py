@@ -5,6 +5,7 @@ import exceptions
 from bs4 import BeautifulSoup
 import urllib
 import ban
+import admin
 
 # Set our name and version.
 name = "Python3Bot"
@@ -17,7 +18,7 @@ def error(error, fatal = False):
 		print("ERROR: {}".format(error), flush = True)
 	else:
 		print("FATAL ERROR: {}".format(error), flush = True)
-		raise SystemExit(1)
+		sys.exit(1)
 
 def warning(warning):
 	""" Prints warning to stdout, flusing the output. """
@@ -46,7 +47,7 @@ class Bot(pydle.Client):
 		debug("Quitting. Reason: {}".format(message))
 		# Save and clean up handlers
 		self.Bans.save_bans()
-
+		self.Admins.save_admins()
 		return super().quit(message)
 
 	def on_connect(self):
@@ -55,27 +56,23 @@ class Bot(pydle.Client):
 		# Call the superclass.
 		super().on_connect()
 		# Set modes on self
-		self.rawmsg("MODE", self.config.nick, "+wg")
+		self.rawmsg("MODE", self.config.nick, self.config.usermode)
 		# Initialize handlers
 		self.Bans = ban.BanManager("bans.dat", self)
+		self.Admins = admin.AdminManager("admins.dat", self)
 		# Join channels.
 		for channel in self.channel_list:
 			self.join(channel)
 
-	def is_admin(self, string, type):
-		if type == "nick":
-			# Return True if we find the current nick in the admin nicks list.
-			for each in self.config.admin_nicks:
-				if each == string:
-					return True
-		elif type == "host":
-			# Return True if we find the current hostmaks in the admin hostmasks list.
-			for each in self.config.admin_hosts:
-				if each == string:
-					return True
-
+	def is_admin(self, target, account):
+		for each in self.Admins.admins:
+			if target == each.target and account == each.nick:
+				return True
+		if account == self.config.owner:
+			return True
 		# This is reached when no admin privliges we're detected.
 		return False
+
 
 
 	@pydle.coroutine
@@ -122,7 +119,7 @@ class Bot(pydle.Client):
 			# Handler for !quit.
 			# Check for admin privs.
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				self.quit("Recieved a quit command.")
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
@@ -132,7 +129,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"remove"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=2)
 				pmsg = ""
 				if len(args) == 2:
@@ -154,7 +151,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"ban"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=3)
 				remove = False
 				reason = ""
@@ -185,7 +182,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"rmban"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					try:
@@ -212,7 +209,7 @@ class Bot(pydle.Client):
 
 		if message.startswith(cmd+"quiet"): # syntax !quiet <hostmask>
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=2)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '+q', args[1])
@@ -224,7 +221,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"unquiet"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '-q', args[1])
@@ -236,7 +233,7 @@ class Bot(pydle.Client):
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '+o', args[1])
@@ -247,7 +244,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"deop"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					if args[1] == self.config.nick:
@@ -262,7 +259,7 @@ class Bot(pydle.Client):
 
 		if message.startswith(cmd+"voice"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '+v', args[1])
@@ -274,7 +271,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"devoice"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '-v', args[1])
@@ -285,7 +282,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"exempt"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '+e', args[1])
@@ -297,7 +294,7 @@ class Bot(pydle.Client):
 		
 		if message.startswith(cmd+"unexempt"):
 			host = yield self.whois(source)
-			if self.is_admin(source, "nick") or self.is_admin(host['hostname'], "host"):
+			if self.is_admin(target, host['account']):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					self.rawmsg("MODE", target, '-e', args[1])
@@ -305,7 +302,42 @@ class Bot(pydle.Client):
 					self.rawmsg("MODE", target, '-e', "*!*@" + host['hostname'])
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
-		
+
+		if message.startswith(cmd+"admin"):
+			host = yield self.whois(source)
+			if host['account'] == self.config.owner:
+				args = message.split(' ', maxsplit=1)
+				adminnum = self.Admins.add_admin(target, args[1])
+				self.__respond(target, source, "{}: Admin \"{}\" added on channel {} as number {}.".format(source, args[1], target, adminnum))
+			else:
+				self.__respond(target, source, "{}: You need to be the bot owner to run that command.".format(source))
+
+		if message.startswith(cmd+"rmadmin"):
+			host = yield self.whois(source)
+			if host['account'] == self.config.owner:
+				args = message.split(' ', maxsplit=1)
+				if len(args) == 2:
+					try:
+						num = float(int(args[1]))
+					except ValueError:
+						self.__respond(target, source, "{}: Invalid number.".format(source))
+						return
+					retval = self.Admins.remove_admin(num)
+					if retval == 0:
+						self.__respond(target, source, "{}: Admin removed.".format(source))
+					else:
+						self.__respond(target, source, "{}: Admin number out of range.".format(source))
+				else:
+					self.__respond(target, source, "{}: Invalid command invocation".format(source))
+			else:
+				self.__respond(target, source, "{}: You need to be the bot owner to run that command.".format(source))
+
+		if message == cmd+"lsadmin":
+			self.notice(source, "Bot admin list:")
+			for i in range(0, len(self.Admins.admins)):
+				self.notice(source, "{}. Channel: {} | Account: {}".format(i, self.Admins.admins[i].target, self.Admins.admins[i].nick))
+			self.notice(source, "End of bot admin list.")
+
 		if message == cmd+"help":
 			# Please leave this here.
 			helptext = "" \
@@ -397,4 +429,4 @@ class Bot(pydle.Client):
 
 	def on_data_error(self, exception):
 		""" Handle's socket errors. """
-		error("Caught a socket exception. {} {}".format(type(exception), str(e)), fatal = True)
+		error("Caught a socket exception. {} {}".format(type(exception), str(exception)), fatal = True)

@@ -28,6 +28,10 @@ class config(configparser.RawConfigParser):
 			if e.args[0] == "channels":
 				return ""
 
+			# If no usermodes are to be applied, apply none
+			if e.args[0] == "usermode":
+				return ""
+
 			# If it's something to do with SSL, then guess it by the port.
 			# If we can't guess it by the port then default to False.
 			if e.args[0] == "ssl":
@@ -41,7 +45,7 @@ class config(configparser.RawConfigParser):
 					return "False"
 
 			# Allow admin-less bot's.
-			if e.args[0] == "hostnames" or e.args[0] == "nicknames":
+			if e.args[0] == "hostnames" or e.args[0] == "nicknames" or e.args[0] == "accounts":
 				return ""
 
 			# If it's any other section/option, then just make a fatal error.
@@ -97,7 +101,10 @@ class config(configparser.RawConfigParser):
 		self.channels = self.getlist('main', 'channels')
 		self.plugins = self.getlist('main', 'plugins')
 		self.plugin_dir = self.get('main', 'plugin_dir')
+		self.usermode = self.get('main', 'usermode')
 		self.sasl_password = self.get('main', 'sasl_password')
 		self.sasl_username = self.get('main', 'sasl_username')
 		self.admin_nicks = self.getlist('admins', 'nicknames')
 		self.admin_hosts = self.getlist('admins', 'hostnames')
+		self.admin_accounts = self.getlist('admins', 'accounts')
+		self.owner = self.get('admins', 'owner')

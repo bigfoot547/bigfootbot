@@ -55,7 +55,7 @@ except KeyboardInterrupt:
 		# Catch exceptions from pydle.
 		bot.error("Failed to disconnect, probably haven't connected yet. {} {}".format(str(e), type(e)))
 
-	raise SystemExit(2)
+	sys.exit(2)
 except (ConnectionRefusedError, socket.timeout):
 	# Handle connection errors.
 	bot.error("Error connecting to {}:{}, Exception: {} {}".format(config_obj.server, config_obj.port, sys.exc_info()[0], sys.exc_info()[1]), fatal = True)
