@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import urllib
 import ban
 import admin
+import tell
 
 # Set our name and version.
 name = "Python3Bot"
@@ -48,6 +49,7 @@ class Bot(pydle.Client):
 		# Save and clean up handlers
 		self.Bans.save_bans()
 		self.Admins.save_admins()
+		self.Tells.save_tells()
 		return super().quit(message)
 
 	def on_connect(self):
@@ -60,6 +62,7 @@ class Bot(pydle.Client):
 		# Initialize handlers
 		self.Bans = ban.BanManager("bans.dat", self)
 		self.Admins = admin.AdminManager("admins.dat", self)
+		self.Tells = tell.TellManager("tells.dat", self)
 		# Join channels.
 		for channel in self.channel_list:
 			self.join(channel)
@@ -338,6 +341,21 @@ class Bot(pydle.Client):
 				self.notice(source, "{}. Channel: {} | Account: {}".format(i, self.Admins.admins[i].target, self.Admins.admins[i].nick))
 			self.notice(source, "End of bot admin list.")
 
+		if message.startswith(cmd+"tell"):
+			args = message.split(' ', maxsplit=2)
+			if len(args) == 3:
+				tell_num = self.Tells.add_tell(target, args[1], source, args[2])
+				self.__respond(target, source, "{}: I'll pass that on when {} is around. The tell ID is {}.".format(source, args[1], tell_num))
+			else:
+				self.__respond(target, source, "{}: Invalid command invocation.".format(source))
+			return
+
+		if message == cmd+"lstell":
+			self.notice(source, "Bot tell list:")
+			for i in range(0, len(self.Tells.tells)):
+				self.notice(source, "{}. Channel: {} | To: {} | From: {}".format(i, self.Tells.tells[i].target, self.Tells.tells[i].nick, self.Tells.tells[i].harbinger))
+			self.notice(source, "End of bot tell list.")
+
 		if message == cmd+"help":
 			# Please leave this here.
 			helptext = "" \
@@ -359,10 +377,18 @@ class Bot(pydle.Client):
 			"!devoice  | [nick]                            | Takes voice from [nick. If not specified, devoices you.\n" \
 			"!exempt   | [hostmask]                        | Sets ban exempt status on [hostmask]. If not specified, uses your hostmask.\n" \
 			"!unexempt | [hostmask]                        | Removes ban exempt status from [hostmask]. If not specified, uses your hostmask.\n" \
-			"!help     |                                   | Sends this help message\n" \
+			"!admin    | <account>                         | Adds <account> as an admin on the channel. (Requires owner privs)\n" \
+			"!rmadmin  | <number>                          | Removes admin specified by <number>. (Requires owner privs)\n" \
+			"!lsadmin  |                                   | Lists all admins.\n" \
+			"!help     |                                   | Sends this help message.\n" \
 			"End of help."
 
 			self.notice(source, helptext)
+
+		if len(self.Tells.tells) > 0:
+			for i in range(len(self.Tells.tells)):
+				if self.Tells.tells[i].nick == source:
+					self.Tells.remove_tell(i)
 
 	def __respond(self, target, source, message):
 		""" Responds to a command. """
