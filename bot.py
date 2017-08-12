@@ -108,6 +108,8 @@ class Bot(pydle.Client):
 						if link_url == -1:
 							link_url = i
 						break
+				if link_url == -1:
+					link_url = link_end
 				try:
 					soup = BeautifulSoup(urllib.request.urlopen(message[link:link_end]), "html5lib")
 					self.__respond(target, source, " [ {} ] - {} ".format(soup.title.string, message[link+prot_len:link_url]))
@@ -353,8 +355,41 @@ class Bot(pydle.Client):
 		if message == cmd+"lstell":
 			self.notice(source, "Bot tell list:")
 			for i in range(0, len(self.Tells.tells)):
-				self.notice(source, "{}. Channel: {} | To: {} | From: {}".format(i, self.Tells.tells[i].target, self.Tells.tells[i].nick, self.Tells.tells[i].harbinger))
+				if self.Tells.tells[i].harbinger == source:
+					self.notice(source, "{}. Channel: {} | To: {} | From: {} | Message: {}".format(i, self.Tells.tells[i].target, self.Tells.tells[i].nick, self.Tells.tells[i].harbinger, self.Tells.tells[i].message))
+				else:
+					self.notice(source, "{}. Channel: {} | To: {} | From: {}".format(i, self.Tells.tells[i].target, self.Tells.tells[i].nick, self.Tells.tells[i].harbinger))
 			self.notice(source, "End of bot tell list.")
+
+		if message.startswith(cmd+"rmtell"):
+			args = message.split(' ', maxsplit=1)
+			if len(args) == 2:
+				try:
+					num = int(float(args[1]))
+				except BaseException as e:
+					self.__respond(target, source, "{}: Invalid number.".format(source))
+					return
+				# Num is a number
+				if num > len(self.Tells.tells)-1:
+					self.__respond(target, source, "{}: Number out of range.".format(source))
+					return
+				else:
+					tell = self.Tells.tells[num]
+					if source == tell.harbinger:
+						self.Tells.remove_tell(num, activate=False)
+						self.__respond(target, source, "{}: Tell removed.".format(source))
+						return
+					else: # The person requesting to remove the tell didn't make it in the first place
+						host = yield self.whois(source)
+						if self.is_admin(target, host['account']):
+							self.Tells.remove_tell(num, activate=False)
+							self.__respond(target, source, "{}: Tell forcibly removed.".format(source))
+							return
+						else:
+							self.__respond(target, source, "{}: You are not authorized to remove someone else's tell.".format(source))
+							return
+			else:
+				self.__respond(target, source, "{}: Invalid command invocation.".format(source))
 
 		if message == cmd+"help":
 			# Please leave this here.
@@ -380,6 +415,9 @@ class Bot(pydle.Client):
 			"!admin    | <account>                         | Adds <account> as an admin on the channel. (Requires owner privs)\n" \
 			"!rmadmin  | <number>                          | Removes admin specified by <number>. (Requires owner privs)\n" \
 			"!lsadmin  |                                   | Lists all admins.\n" \
+			"!tell     | <nick> <message>                  | Tells me to pass <message> onto <nick> next time they type a message.\n" \
+			"!rmtell   | <number>                          | Removes a number by tell ID, an admin can remove the tells of someone else.\n" \
+			"!lstell   |                                   | Lists all tells, the message is displayed only on your tells.\n" \
 			"!help     |                                   | Sends this help message.\n" \
 			"End of help."
 
