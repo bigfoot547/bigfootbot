@@ -7,6 +7,7 @@ import urllib
 import ban
 import admin
 import tell
+import chan
 
 # Set our name and version.
 name = "Python3Bot"
@@ -50,6 +51,7 @@ class Bot(pydle.Client):
 		self.Bans.save_bans()
 		self.Admins.save_admins()
 		self.Tells.save_tells()
+		self.Channels.save_chans()
 		return super().quit(message)
 
 	def on_connect(self):
@@ -63,9 +65,7 @@ class Bot(pydle.Client):
 		self.Bans = ban.BanManager("bans.dat", self)
 		self.Admins = admin.AdminManager("admins.dat", self)
 		self.Tells = tell.TellManager("tells.dat", self)
-		# Join channels.
-		for channel in self.channel_list:
-			self.join(channel)
+		self.Channels = chan.ChannelManager("channels.dat", self)
 
 	def is_admin(self, target, account):
 		for each in self.Admins.admins:
@@ -323,7 +323,7 @@ class Bot(pydle.Client):
 				args = message.split(' ', maxsplit=1)
 				if len(args) == 2:
 					try:
-						num = float(int(args[1]))
+						num = int(float(args[1]))
 					except ValueError:
 						self.__respond(target, source, "{}: Invalid number.".format(source))
 						return
@@ -390,6 +390,47 @@ class Bot(pydle.Client):
 							return
 			else:
 				self.__respond(target, source, "{}: Invalid command invocation.".format(source))
+
+		if message.startswith(cmd+"join"):
+			host = yield self.whois(source)
+			if self.config.owner == host['account']:
+				args = message.split(' ')
+				if len(args) == 2:
+					self.Channels.join_chan(args[1])
+					self.__respond(target, source, "{}: Channel joined.".format(source))
+				else:
+					self.__respond(target, source, "{}: Invalid command invocation.".format(source))
+			else:
+				self.__respond(target, source, "{}: You need to be the bot owner to execute this command.".format(source))
+
+		if message.startswith(cmd+"part"):
+			host = yield self.whois(source)
+			args = message.split(' ')
+			if len(args) == 2:
+				try:
+					num = int(float(args[1]))
+				except ValueError:
+					self.__respond(target, source, "{}: Invalid number.".format(source))
+					return
+				if num > len(self.Channels.channels)-1:
+					self.__respond(target, source, "{}: Number out of range.".format(source))
+					return
+				try:
+					if self.is_admin(self.Channels.channels[num].name, host['account']):
+						self.Channels.part_chan(num, source)
+						self.__respond(target, source, "{}: Channel removed.".format(source))
+				except BaseException as e:
+					print(str(e), type(e))
+			else:
+				self.__respond(target, source, "{}: Invalid command invocation.".format(source))
+
+		if message == cmd+"lschans":
+			self.notice(source, "Bot channel list:")
+			i = 0
+			for each in self.Channels.channels:
+				self.notice(source, "{}. {}".format(i, each.name))
+				i += 1
+			self.notice(source, "End of bot channel list.")
 
 		if message == cmd+"help":
 			# Please leave this here.
@@ -468,8 +509,14 @@ class Bot(pydle.Client):
 		# Call the superclass.
 		super().on_kick(channel, user, message)
 
-		# Rejoin the channel
-		if user == self.config.nick:
+		# Rejoin the channel if on list
+		on_list = False
+
+		for each in self.Channels.channels:
+			if each.name == channel:
+				on_list = True
+
+		if user == self.config.nick and on_list:
 			self.join(channel)
 
 	def on_raw(self, data):
