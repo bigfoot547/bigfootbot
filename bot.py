@@ -112,7 +112,7 @@ class Bot(pydle.Client):
 					link_url = link_end
 				try:
 					soup = BeautifulSoup(urllib.request.urlopen(message[link:link_end]), "html5lib")
-					self.__respond(target, source, " [ {} ] - {} ".format(soup.title.string, message[link+prot_len:link_url]))
+					self.__respond(target, source, " [ {} ]".format(soup.title.string, message[link+prot_len:link_url]))
 				except:
 					self.__respond(target, source, "{}".format(sys.exec_info()[0]))
 
