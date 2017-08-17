@@ -38,7 +38,6 @@ try:
 	client = bot.Bot(nickname = config_obj.nick, realname = config_obj.name)
 	# Pass on our plugin_manager instance, config instance, and the channel list.
 	client.plugin = plugin_obj
-	client.channel_list = config_obj.channels
 	client.config = config_obj
 	# Connect the bot.
 	client.sasl_password = config_obj.sasl_password
