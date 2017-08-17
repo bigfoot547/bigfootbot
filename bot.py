@@ -129,9 +129,6 @@ class Bot(pydle.Client):
 				self.quit("Recieved a quit command.")
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
-	
-		if message == cmd+"wiki":
-			self.__respond(target, source, "Command ran with argument")
 
 		if message.startswith(cmd+"remove"):
 			host = yield self.whois(source)
@@ -239,11 +236,14 @@ class Bot(pydle.Client):
 
 		if message.startswith(cmd+"w"):
 			host = yield self.whois(source)
-			args = message.split(' ', maxsplit=1)
-			if len(args) == 2:
-				self.__respond(target, source, wikipedia.summary(args[1], sentences=2))
-			else:	
-				self.__respond(target, source, "This command requires at least one argument")
+			if self.is_admin(target, host['account']):
+				args = message.split(' ', maxsplit=1)
+				if len(args) == 2:
+					self.__respond(target, source, wikipedia.summary(args[1], sentences=2))
+				else:	
+					self.__respond(target, source, "This command requires at least one argument")
+			else:
+				self.__respond(target, source, "I guess only admins can use this")
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
