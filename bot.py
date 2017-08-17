@@ -132,11 +132,11 @@ class Bot(pydle.Client):
 	
 		if message == cmd+"w":
 			args = message.split(' ')
-			self.__respond(target, source, wikipedia.summary(args[1], sentences=1))
-			self.__respond(target, source, "the !w command has executed but provided no output")
+			##self.__respond(target, source, wikipedia.summary(args[1], sentences=1))
+			self.__respond(target, source, "the !w command has executed with the argument", args[1])
 
 		if message == cmd+"wiki":
-			self.__respond(target, source, "Alefir I command you to add the wikipedia lib")
+			self.__respond(target, source, "Command ran with argument")
 
 		if message.startswith(cmd+"remove"):
 			host = yield self.whois(source)
