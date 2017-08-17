@@ -129,8 +129,8 @@ class Bot(pydle.Client):
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
 		
-		if message == cmd+"next":
-			self.__respond(target, source, "Another satisfied customer. NEXT!")
+		if message == cmd+"wiki":
+			self.__respond(target, source, "Alefir I command you to add the wikipedia lib")
 		
 		if message.startswith(cmd+"remove"):
 			host = yield self.whois(source)
