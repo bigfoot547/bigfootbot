@@ -247,7 +247,8 @@ class Bot(pydle.Client):
 			args = message.split(' ', maxsplit=1)
 			if len(args) == 2:
 				self.__respond(target, source, wikipedia.summary(args[1], sentences=2))
-			else:					self.__respond(target, source, "This command requires at least one argument")
+			else:	
+				self.__respond(target, source, "This command requires at least one argument")
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
