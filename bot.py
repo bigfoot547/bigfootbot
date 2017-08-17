@@ -132,7 +132,7 @@ class Bot(pydle.Client):
 	
 		if message == cmd+"w":
 			args = message.split(' ')
-			self.__respond(target, source, wikipedia.summary(args[1]))
+			self.__respond(target, source, wikipedia.summary(args[1], sentences=1))
 			self.__respond(target, source, "the !w command has executed but provided no output")
 
 		if message == cmd+"wiki":
