@@ -8,6 +8,7 @@ import ban
 import admin
 import tell
 import chan
+import wikipedia
 
 # Set our name and version.
 name = "Python3Bot"
@@ -131,7 +132,12 @@ class Bot(pydle.Client):
 		
 		if message == cmd+"wiki":
 			self.__respond(target, source, "Alefir I command you to add the wikipedia lib")
-		
+
+		if message == cmd+"w":
+			args = message.split(' ')
+			self.__respond(target, source, wikipedia.summary(args[1]))
+			self.__respond(target, source, "the !w command has executed but provided no output")
+
 		if message.startswith(cmd+"remove"):
 			host = yield self.whois(source)
 			if self.is_admin(target, host['account']):
