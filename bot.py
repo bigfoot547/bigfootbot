@@ -129,14 +129,14 @@ class Bot(pydle.Client):
 				self.quit("Recieved a quit command.")
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
-		
-		if message == cmd+"wiki":
-			self.__respond(target, source, "Alefir I command you to add the wikipedia lib")
-
+	
 		if message == cmd+"w":
 			args = message.split(' ')
 			self.__respond(target, source, wikipedia.summary(args[1]))
 			self.__respond(target, source, "the !w command has executed but provided no output")
+
+		if message == cmd+"wiki":
+			self.__respond(target, source, "Alefir I command you to add the wikipedia lib")
 
 		if message.startswith(cmd+"remove"):
 			host = yield self.whois(source)
