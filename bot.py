@@ -239,7 +239,7 @@ class Bot(pydle.Client):
 			if len(args) == 2:
 				try:
 					self.__respond(target, source, wikipedia.summary(args[1], sentences=2))
-				except BaseException as e:
+				except wikipedia.exceptions.DisambiguationError as e:
 					output = str(e)
 					print(str(e))
 					split = output.split('\n')		
