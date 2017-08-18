@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Bot info extensions
+*.dat
+
 # C extensions
 *.so
 
