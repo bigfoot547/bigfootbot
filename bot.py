@@ -235,15 +235,17 @@ class Bot(pydle.Client):
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
 
 		if message.startswith(cmd+"w"):
-			host = yield self.whois(source)
-			if self.is_admin(target, host['account']):
-				args = message.split(' ', maxsplit=1)
-				if len(args) == 2:
+			args = message.split(' ', maxsplit=1)
+			if len(args) == 2:
+				try:
 					self.__respond(target, source, wikipedia.summary(args[1], sentences=2))
-				else:	
-					self.__respond(target, source, "This command requires at least one argument")
-			else:
-				self.__respond(target, source, "I guess only admins can use this")
+				except BaseException as e:
+					output = str(e)
+					print(str(e))
+					split = output.split('\n')		
+					self.__respond(target, source, split[1])
+			else:	
+				self.__respond(target, source, "This command requires at least one argument")
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
