@@ -238,7 +238,7 @@ class Bot(pydle.Client):
 			args = message.split(' ', maxsplit=1)
 			if len(args) == 2:
 				try:
-					self.__respond(target, source, wikipedia.summary(args[1], sentences=2))
+					self.__respond(target, source, "{} | {}".format(wikipedia.summary(args[1], sentences=2), wikipedia.page(args[1]).url))
 				except wikipedia.exceptions.DisambiguationError as e:
 					output = str(e)
 					print(str(e))
