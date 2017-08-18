@@ -244,6 +244,8 @@ class Bot(pydle.Client):
 					print(str(e))
 					split = output.split('\n')		
 					self.__respond(target, source, "{}\n{}\n{}\n{}\n{}".format(split[0], split[1], split[2], split[3], split[4]))
+				except wikipedia.exceptions.PageError as e:
+					self.__respond(target, source, "Error: \"{}\" does not match a page".format(args[1]))
 			else:	
 				self.__respond(target, source, "This command requires at least one argument")
 
