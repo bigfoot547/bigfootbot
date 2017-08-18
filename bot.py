@@ -432,6 +432,18 @@ class Bot(pydle.Client):
 				i += 1
 			self.notice(source, "End of bot channel list.")
 
+		if message == cmd+"ghost":
+			host = yield self.whois(source)
+			if host['account'] == self.config.owner:
+				self.message("NickServ", "GHOST {} {}".format(self.config.nick, self.config.sasl_password))
+				self.__respond(target, source, "{}: Ghosted.".format(source))
+			else:
+				self.__respond(target, source, "{}: You must be the bot owner to execute that command.".format(source))
+
+		if message == cmd+"nick":
+			self.rawmsg("NICK", self.config.nick)
+			self.__respond(target, source, "{}: Nick changed.".format(source))
+
 		if message == cmd+"help":
 			# Please leave this here.
 			helptext = "" \
@@ -459,6 +471,8 @@ class Bot(pydle.Client):
 			"!tell     | <nick> <message>                  | Tells me to pass <message> onto <nick> next time they type a message.\n" \
 			"!rmtell   | <number>                          | Removes a number by tell ID, an admin can remove the tells of someone else.\n" \
 			"!lstell   |                                   | Lists all tells, the message is displayed only on your tells.\n" \
+			"!ghost    |                                   | Disconnect a bot ghost\n" \
+			"!nick     |                                   | Resets the nick\n" \
 			"!help     |                                   | Sends this help message.\n" \
 			"End of help."
 
