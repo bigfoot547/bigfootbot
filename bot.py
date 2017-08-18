@@ -243,7 +243,7 @@ class Bot(pydle.Client):
 					output = str(e)
 					print(str(e))
 					split = output.split('\n')		
-					self.__respond(target, source, split[1])
+					self.__respond(target, source, "{}\n{}\n{}\n{}\n{}".format(split[0], split[1], split[2], split[3], split[4]))
 			else:	
 				self.__respond(target, source, "This command requires at least one argument")
 
