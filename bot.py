@@ -9,6 +9,7 @@ import admin
 import tell
 import chan
 import wikipedia
+import wolframalpha
 
 # Set our name and version.
 name = "Python3Bot"
@@ -234,7 +235,7 @@ class Bot(pydle.Client):
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
 
-		if message.startswith(cmd+"w"):
+		if message.startswith(cmd+"wiki"):
 			args = message.split(' ', maxsplit=1)
 			if len(args) == 2:
 				try:
@@ -247,7 +248,22 @@ class Bot(pydle.Client):
 				except wikipedia.exceptions.PageError as e:
 					self.__respond(target, source, "Error: \"{}\" does not match a page".format(args[1]))
 			else:	
-				self.__respond(target, source, "This command requires at least one argument")
+				self.__respond(target, source, "This command requires an argument")
+
+		if message.startswith(cmd+"wolf"):
+			args = message.split(' ', maxsplit=1)
+			app_id = "3HLT6T-EG7UJL8574"
+			if len(args) == 2:
+				try:
+					client = wolframalpha.Client(app_id)
+					res = client.query(args[1])
+					self.__respond(target, source, "{}: {}".format(args[1], next(res.results).text))
+				except BaseException as e:
+					print(str(e))
+					self.__respond(target, source, "There was an error")
+			else:
+				self.__respond(target, source, "This command requires an argument")
+				
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
