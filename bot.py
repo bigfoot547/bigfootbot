@@ -488,6 +488,8 @@ class Bot(pydle.Client):
 			"!unban    | <mask>                            | Unbans the specified <mask>.\n" \
 			"!quiet    | <mask>                            | Sets quiet on <mask>.\n" \
 			"!unquiet  | <mask>                            | Removes quiet on <mask>.\n" \
+			"!wiki     | <query>                           | Searches Wikipedia for <query>.\n" \
+			"!wolf     | <query>                           | Searches Wolfram|Alpha for <query>.\n" \
 			"!op       | [nick]                            | Ops [nick]. If not specified, ops you.\n" \
 			"!deop     | [nick]                            | Deops [nick]. If not specified, deops you.\n" \
 			"!voice    | [nick]                            | Gives voice to [nick]. If not specified, voices you.\n" \
