@@ -13,7 +13,7 @@ import wolframalpha
 
 # Set our name and version.
 name = "Python3Bot"
-version = "0.1-dev"
+version = "0.2-wiki"
 cmd = "!"
 
 def error(error, fatal = False):
