@@ -240,36 +240,38 @@ class Bot(pydle.Client):
 			args = message.split(' ', maxsplit=1)
 			if len(args) == 2:
 				try:
-					self.__respond(target, source, "{} | {}".format(wikipedia.summary(args[1], sentences=2), wikipedia.page(args[1]).url))
+					self.__respond(target, source, "[Wiki] {} | {}".format(wikipedia.summary(args[1], sentences=2), wikipedia.page(args[1]).url))
 				except wikipedia.exceptions.DisambiguationError as e:
 					output = str(e)
 					print(str(e))
 					split = output.split('\n')		
-					self.__respond(target, source, "{}\n{}\n{}\n{}\n{}".format(split[0], split[1], split[2], split[3], split[4]))
+					self.__respond(target, source, "[Wiki] {}\n{}\n{}\n{}\n{}".format(split[0], split[1], split[2], split[3], split[4]))
 				except wikipedia.exceptions.PageError as e:
-					self.__respond(target, source, "Error: \"{}\" does not match a page".format(args[1]))
+					self.__respond(target, source, "[Wiki] \"{}\" does not match any pages".format(args[1]))
 			else:	
-				self.__respond(target, source, "This command requires an argument")
+				self.__respond(target, source, "[Wiki] Sorry, you need to tell me what you want")
 
 		if message.startswith(cmd+"wolf"):
 			args = message.split(' ', maxsplit=1)
 			app_id = "3HLT6T-EG7UJL8574"
-			if len(args) == 2:
+			if args[1] == 'Who is God':
+				self.__respond(target, source, "[W|A] That would be alefir")
+			elif len(args) == 2:
 				try:
 					client = wolframalpha.Client(app_id)
 					res = client.query(args[1])
-					self.__respond(target, source, "{}: {}".format(args[1], next(res.results).text))
+					self.__respond(target, source, "[W|A] {}: {}".format(args[1], next(res.results).text))
 				except BaseException as e:
 					print(str(e))
-					self.__respond(target, source, "There was an error")
+					self.__respond(target, source, "[W|A] Sorry, I didn't understand that")
 			else:
-				self.__respond(target, source, "This command requires an argument")
+				self.__respond(target, source, "[W|A] Sorry, you need to tell me what you want")
 
 		if message.startswith(cmd+"fortune"):
 			def random_line(fname):
 				lines = open(fname).read().splitlines()
 				return random.choice(lines)
-			self.__respond(target, source, (random_line('proverbs.txt')))
+			self.__respond(target, source, "[Fortune] {}".format(random_line('proverbs.txt')))
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
@@ -524,9 +526,9 @@ class Bot(pydle.Client):
 	def __respond(self, target, source, message):
 		""" Responds to a command. """
 		if self.is_channel(target):
-			self.notice(target, message)
+			self.message(target, message)
 		else:
-			self.notice(source, message)
+			self.message(source, message)
 
 	def on_message(self, target, source, message):
 		""" Debugging function to print messages to stdout """
