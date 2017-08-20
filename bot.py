@@ -263,7 +263,6 @@ class Bot(pydle.Client):
 					self.__respond(target, source, "There was an error")
 			else:
 				self.__respond(target, source, "This command requires an argument")
-				
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
