@@ -10,6 +10,7 @@ import tell
 import chan
 import wikipedia
 import wolframalpha
+import random
 
 # Set our name and version.
 name = "Python3Bot"
@@ -263,6 +264,12 @@ class Bot(pydle.Client):
 					self.__respond(target, source, "There was an error")
 			else:
 				self.__respond(target, source, "This command requires an argument")
+
+		if message.startswith(cmd+"fortune"):
+			def random_line(fname):
+				lines = open(fname).read().splitlines()
+				return random.choice(lines)
+			self.__respond(target, source, (random_line('proverbs.txt')))
 
 		if message.startswith(cmd+"op"):
 			host = yield self.whois(source)
