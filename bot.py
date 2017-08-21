@@ -11,6 +11,9 @@ import chan
 import wikipedia
 import wolframalpha
 import random
+import urllib.request
+import urllib.parse
+import re
 
 # Set our name and version.
 name = "Python3Bot"
@@ -235,6 +238,17 @@ class Bot(pydle.Client):
 					return
 			else:
 				self.__respond(target, source, "{}: You need admin privs to execute that command.".format(source))
+
+		if message.startswith(cmd+"yt"):
+			args = message.split(' ', maxsplit=1)
+			if len(args) == 2:
+				query_string = urllib.parse.urlencode({"search_query" : args[1]})
+				html_content = urllib.request.urlopen("http://www.youtube.com/results?" + query_string)
+				search_results = re.findall(r'href=\"\/watch\?v=(.{11})', html_content.read().decode())
+				self.__respond(target, source, "http://www.youtube.com/watch?v={}".format(search_results[0]))
+			else:
+				self.__respond(target, source, "[YT] Sorry, you need to tell me what you want")
+
 
 		if message.startswith(cmd+"wiki"):
 			args = message.split(' ', maxsplit=1)
