@@ -239,15 +239,21 @@ class Bot(pydle.Client):
 		if message.startswith(cmd+"wiki"):
 			args = message.split(' ', maxsplit=1)
 			if len(args) == 2:
-				try:
-					self.__respond(target, source, "[Wiki] {} | {}".format(wikipedia.summary(args[1], sentences=2), wikipedia.page(args[1]).url))
-				except wikipedia.exceptions.DisambiguationError as e:
-					output = str(e)
-					print(str(e))
-					split = output.split('\n')		
-					self.__respond(target, source, "[Wiki] {}\n{}\n{}\n{}\n{}".format(split[0], split[1], split[2], split[3], split[4]))
-				except wikipedia.exceptions.PageError as e:
-					self.__respond(target, source, "[Wiki] \"{}\" does not match any pages".format(args[1]))
+				if args[1] == "random":
+					try:
+						self.__respond(target, source, "[Wiki] {}".format(wikipedia.summary(wikipedia.random(pages=1), sentences=2)))
+					except Exception as e:
+						print(str(e))
+				else:
+					try:
+						self.__respond(target, source, "[Wiki] {} | {}".format(wikipedia.summary(args[1], sentences=2), wikipedia.page(args[1]).url))
+					except wikipedia.exceptions.DisambiguationError as e:
+						output = str(e)
+						print(str(e))
+						split = output.split('\n')		
+						self.__respond(target, source, "[Wiki] {}\n{}\n{}\n{}\n{}".format(split[0], split[1], split[2], split[3], split[4]))
+					except wikipedia.exceptions.PageError as e:
+						self.__respond(target, source, "[Wiki] \"{}\" does not match any pages".format(args[1]))
 			else:	
 				self.__respond(target, source, "[Wiki] Sorry, you need to tell me what you want")
 
@@ -496,7 +502,7 @@ class Bot(pydle.Client):
 			"!unban    | <mask>                            | Unbans the specified <mask>.\n" \
 			"!quiet    | <mask>                            | Sets quiet on <mask>.\n" \
 			"!unquiet  | <mask>                            | Removes quiet on <mask>.\n" \
-			"!wiki     | <query>                           | Searches Wikipedia for <query>.\n" \
+			"!wiki     | <query> | [random]                | Searches Wikipedia for <query>.\n" \
 			"!wolf     | <query>                           | Searches Wolfram|Alpha for <query>.\n" \
 			"!fortune  |                                   | Says a random fortune for you.\n" \
 			"!op       | [nick]                            | Ops [nick]. If not specified, ops you.\n" \
