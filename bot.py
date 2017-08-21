@@ -520,6 +520,7 @@ class Bot(pydle.Client):
 			"!unquiet  | <mask>                            | Removes quiet on <mask>.\n" \
 			"!wiki     | <query> | [random]                | Searches Wikipedia for <query>.\n" \
 			"!wolf     | <query>                           | Searches Wolfram|Alpha for <query>.\n" \
+			"!yt       | <query>                           | Searches Youtube for <query>.\n" \
 			"!fortune  |                                   | Says a random fortune for you.\n" \
 			"!op       | [nick]                            | Ops [nick]. If not specified, ops you.\n" \
 			"!deop     | [nick]                            | Deops [nick]. If not specified, deops you.\n" \
