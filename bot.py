@@ -245,7 +245,9 @@ class Bot(pydle.Client):
 				query_string = urllib.parse.urlencode({"search_query" : args[1]})
 				html_content = urllib.request.urlopen("http://www.youtube.com/results?" + query_string)
 				search_results = re.findall(r'href=\"\/watch\?v=(.{11})', html_content.read().decode())
-				self.__respond(target, source, "http://www.youtube.com/watch?v={}".format(search_results[0]))
+				yturl = "http://www.youtube.com/watch?v={}".format(search_results[0])
+				ytpage = BeautifulSoup(urllib.request.urlopen(yturl))
+				self.__respond(target, source, "[YT] {} | {}".format(ytpage.title.string, yturl))
 			else:
 				self.__respond(target, source, "[YT] Sorry, you need to tell me what you want")
 
