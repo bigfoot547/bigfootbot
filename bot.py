@@ -246,7 +246,7 @@ class Bot(pydle.Client):
 						print(str(e))
 				else:
 					try:
-						self.__respond(target, source, "[Wiki] {} | {}".format(wikipedia.summary(args[1], sentences=2), wikipedia.page(args[1]).url))
+						self.__respond(target, source, "[Wiki] {} | {}".format(wikipedia.summary(args[1], sentences=3), wikipedia.page(args[1]).url))
 					except wikipedia.exceptions.DisambiguationError as e:
 						output = str(e)
 						print(str(e))
