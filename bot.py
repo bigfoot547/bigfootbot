@@ -14,6 +14,7 @@ import random
 import urllib.request
 import urllib.parse
 import re
+import pyjokes
 
 # Set our name and version.
 name = "Python3Bot"
@@ -262,6 +263,9 @@ class Bot(pydle.Client):
 					self.__respond(target, source, "[W|A] Sorry, I didn't understand that")
 			else:
 				self.__respond(target, source, "[W|A] Sorry, you need to tell me what you want")
+
+		if message.startswith(cmd+"joke"):
+			self.__respond(target, source, "[Joke] {}".format(pyjokes.get_joke()))
 
 		if message.startswith(cmd+"fortune"):
 			def random_line(fname):
