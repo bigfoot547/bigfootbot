@@ -48,7 +48,10 @@ def is_yes(s):
 
 class Bot(pydle.Client):
 	""" The main bot class. Handles events, and the raw IRC connection."""
-
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.cached_links = {}
+                
 	def quit(self, message=None):
 		""" Quits network. """
 		# I'm gonna implement something here.
@@ -91,11 +94,17 @@ class Bot(pydle.Client):
 		message = message.strip(' ')
 
 		# Test for links
-		match = re.search("http[s]?:\/\/.*\..*", message)
-		if match:
-			url = urllib.request.urlopen(message)
-			page = BeautifulSoup(url)
-			self.__respond(target, source, "[ {} ]".format(page.title.string))
+		# match = re.search("http[s]?:\/\/.*\..*", message)
+		links = re.findall('(http[s]?:\/\/[^\s]*)', message)
+		
+		for link in links:
+                    title = self.cached_links.get(link, '')
+                    if title == '':
+                            url = urllib.request.urlopen(link)
+                            page = BeautifulSoup(url)
+                            title = page.title.string
+                            self.cached_links[link] = title
+                    self.__respond(target, source, "[ {} ]".format(title))
 
 		if message == cmd+"version":
 			# Handler for !version.
