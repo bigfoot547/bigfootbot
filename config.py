@@ -102,6 +102,7 @@ class config(configparser.RawConfigParser):
 		self.plugins = self.getlist('main', 'plugins')
 		self.plugin_dir = self.get('main', 'plugin_dir')
 		self.usermode = self.get('main', 'usermode')
+		self.deop_owner = self.getboolean('main', 'deop_owner')
 		self.sasl_password = self.get('main', 'sasl_password')
 		self.sasl_username = self.get('main', 'sasl_username')
 		self.admin_nicks = self.getlist('admins', 'nicknames')

@@ -94,7 +94,7 @@ class Bot(pydle.Client):
 		if match:
 			url = urllib.request.urlopen(message)
 			page = BeautifulSoup(url)
-			self.__respond(target, source, page.title.string)
+			self.__respond(target, source, "[ {} ]".format(page.title.string))
 
 		if message == cmd+"version":
 			# Handler for !version.
@@ -584,6 +584,16 @@ class Bot(pydle.Client):
 		# And output it.
 		if data.find("PING") == -1 and data.find("PRIVMSG") == -1:
 			debug(data)
+
+	def on_join(self, channel, user):
+		""" Deop the owner upon him joining (if the config option is set) """
+		# Call the superclass
+		super().on_join(channel, user)
+
+		account = self.whois(user)
+		# Check config option
+		if self.config.deop_owner and account['account'] == self.config.owner:
+			self.rawmsg('MODE', channel, '-o', nick)
 
 	def on_unknown(self, message):
 		""" Unknown command. """
